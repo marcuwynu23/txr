@@ -1,0 +1,49 @@
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: txr-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: txr
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - txr-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: txr-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/txr?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - SESSION_COOKIE_NAME=txr_session
+      - ADMIN_EMAIL=admin@txr.app
+      - ADMIN_PASSWORD=admin123
+      - ADMIN_NAME=Admin
+    depends_on:
+      - mongodb
+    networks:
+      - txr-network
+    # Wait for MongoDB to be ready
+    command: sh -c "sleep 10 && node server.js"
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  txr-network:
+    driver: bridge
