@@ -10,7 +10,7 @@ const COOKIE_NAME = 'session_token'
 
 export type SessionPayload = {
   userId: string
-  role: 'admin' | 'organizer' | 'attendee'
+  role: 'admin' | 'attendee'
   expires: Date
 }
 
@@ -28,7 +28,7 @@ export async function decrypt(session: string | undefined = '') {
       algorithms: ['HS256'],
     })
     return payload
-  } catch (error) {
+  } catch {
     return null
   }
 }
