@@ -1,7 +1,6 @@
 
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-
+import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -22,47 +21,31 @@ interface MongooseCache {
 }
 
 declare global {
-    // eslint-disable-next-line no-var
     var mongoose: MongooseCache;
 }
 
-let cached = (global as any).mongoose;
+let cached = (global as unknown as { mongoose: MongooseCache }).mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = (global as unknown as { mongoose: MongooseCache }).mongoose = { conn: null, promise: null };
 }
 
-async function seedDatabase() {
+async function ensureAdmin() {
   try {
-    // Dynamic import to avoid circular dependencies if any
     const User = (await import('@/models/User')).default;
-    
-    const count = await User.countDocuments();
-    if (count === 0) {
-      console.log('🌱 Seeding default accounts...');
-      
-      const hashedAdminPassword = await bcrypt.hash('admin123', 10);
-      await User.create({
-        name: 'System Admin',
-        email: 'admin@example.com',
-        password: hashedAdminPassword,
-        role: 'admin'
-      });
 
-      const hashedUserPassword = await bcrypt.hash('user123', 10);
-      await User.create({
-        name: 'Default User',
-        email: 'user@example.com',
-        password: hashedUserPassword,
-        role: 'attendee'
-      });
-      
-      console.log('✅ Default accounts created:');
-      console.log('   Admin: admin@example.com / admin123');
-      console.log('   User:  user@example.com / user123');
+    const email = process.env.ADMIN_EMAIL || 'admin@txr.app';
+    const password = process.env.ADMIN_PASSWORD || 'admin123';
+    const name = process.env.ADMIN_NAME || 'Admin';
+
+    const exists = await User.findOne({ email });
+    if (!exists) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await User.create({ name, email, password: hashedPassword, role: 'admin' });
+      console.log(`✅ Admin account created (${email})`);
     }
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error('❌ Failed to create admin:', error);
   }
 }
 
@@ -78,8 +61,7 @@ async function dbConnect() {
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then(async (mongoose) => {
       const conn = mongoose.connection;
-      // Seed on first connection
-      await seedDatabase();
+      await ensureAdmin();
       return conn;
     });
   }
