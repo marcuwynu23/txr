@@ -1,23 +1,25 @@
-# 🎫 txr — Event Ticketing & Management System
+<h1 align="center">txr</h1>
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+<p align="center">
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js" alt="Next.js" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript" alt="TypeScript" /></a>
+  <a href="https://www.mongodb.com/"><img src="https://img.shields.io/badge/MongoDB-Atlas-green?style=flat-square&logo=mongodb" alt="MongoDB" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind CSS" /></a>
+</p>
 
 **txr** (pronounced *ticker*) is a production-ready, full-stack event management platform built for speed, security, and a premium user experience. Manage events, issue high-fidelity tickets, and track live attendance with ease.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🏢 For Organizers
+### For Organizers
 - **Live Admin Dashboard**: Real-time analytics on ticket sales, revenue, and attendee check-ins.
 - **Dynamic Event Management**: Create, edit, publish, and view private/public events with custom capacities.
 - **Live Attendance Scanner**: Integrated browser-based QR code scanner for seamless venue entry using `html5-qrcode`.
 - **Attendee Tracking**: Instant access to attendee lists with precise check-in timestamps.
 
-### 👥 For Attendees
+### For Attendees
 - **Seamless Booking**: Support for both Free and Paid events with mock payment integration.
 - **My Tickets Dashboard**: Personal portal to manage upcoming events and cancel registrations.
 - **QR Entry Passes**: Instantly download high-quality QR codes for fast entry at event gates.
@@ -25,7 +27,7 @@
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
@@ -36,7 +38,7 @@
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### 1. Prerequisites
 - Node.js 18+ 
@@ -62,12 +64,12 @@ Open [http://localhost:3000](http://localhost:3000) to see the application in ac
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 The project follows a modular architecture with a strict separation of concerns:
 - `src/actions`: Server-side logic and database interactions.
 - `src/components`: Reusable UI components (Atomic design principles).
 - `src/models`: Mongoose schemas for data integrity.
 - `src/lib`: Shared utilities for authentication and database connections.
 
-Built with ❤️ by the **txr** team.
+Built by the **txr** team.
 
