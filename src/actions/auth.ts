@@ -20,7 +20,13 @@ const registerSchema = z.object({
   role: z.enum(['admin', 'attendee']).default('attendee'), // Simplified roles
 })
 
-export async function login(prevState: any, formData: FormData) {
+interface AuthFormState {
+  errors?: Record<string, string[]>;
+  error?: string;
+  success?: string;
+}
+
+export async function login(prevState: AuthFormState | null, formData: FormData) {
   const result = loginSchema.safeParse(Object.fromEntries(formData))
 
   if (!result.success) {
@@ -54,7 +60,7 @@ export async function login(prevState: any, formData: FormData) {
   }
 }
 
-export async function register(prevState: any, formData: FormData) {
+export async function register(prevState: AuthFormState | null, formData: FormData) {
     const data = Object.fromEntries(formData);
     // Combine names if separate inputs
     if (data['first-name'] && data['last-name']) {
@@ -112,11 +118,11 @@ export async function getUserProfile() {
 
     return {
         ...user,
-        _id: (user as any)._id.toString()
+        _id: (user._id as import('mongoose').Types.ObjectId).toString()
     };
 }
 
-export async function updateProfile(prevState: any, formData: FormData) {
+export async function updateProfile(prevState: AuthFormState | null, formData: FormData) {
     const session = await (await import('@/lib/session')).getSession();
     if (!session?.userId) return { error: 'Unauthorized' };
 
@@ -126,7 +132,7 @@ export async function updateProfile(prevState: any, formData: FormData) {
 
     await dbConnect();
     
-    const updateData: any = { name, email };
+    const updateData: Record<string, string> = { name, email };
     
     if (password && password.length >= 6) {
         updateData.password = await bcrypt.hash(password, 10);
@@ -135,7 +141,8 @@ export async function updateProfile(prevState: any, formData: FormData) {
     try {
         await User.findByIdAndUpdate(session.userId, updateData);
         return { success: 'Profile updated successfully' };
-    } catch (err: any) {
-        return { error: err.message || 'Failed to update profile' };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to update profile';
+        return { error: message };
     }
 }
