@@ -4,6 +4,23 @@
 import dbConnect from "@/lib/db";
 import Event, { IEvent } from "@/models/Event";
 import Ticket from "@/models/Ticket";
+import { Types } from "mongoose";
+
+interface LeanTicket {
+    _id: Types.ObjectId;
+    event?: { title?: string; _id?: Types.ObjectId };
+    user?: { name?: string; email?: string; _id?: Types.ObjectId };
+    status: string;
+    checkedInAt?: Date;
+    ticketType?: string;
+    code?: string;
+    createdAt?: Date;
+}
+
+interface TicketType {
+    _id?: Types.ObjectId;
+    [key: string]: unknown;
+}
 
 export async function getAdminStats() {
     await dbConnect();
@@ -12,7 +29,7 @@ export async function getAdminStats() {
     
     // Filter by events created by this admin
     const adminEvents = await Event.find({ organizer: session.userId }).lean();
-    const eventIds = adminEvents.map(e => (e as any)._id);
+    const eventIds = adminEvents.map(e => e._id as Types.ObjectId);
 
     const totalEvents = adminEvents.length;
     const totalTicketsSold = await Ticket.countDocuments({ event: { $in: eventIds } });
@@ -24,7 +41,7 @@ export async function getAdminStats() {
         .populate('user')
         .sort({ createdAt: -1 })
         .limit(50)
-        .lean();
+        .lean<LeanTicket[]>();
     
     return {
         totalEvents,
@@ -32,16 +49,16 @@ export async function getAdminStats() {
         totalCheckedIn,
         recentEvents: recentEvents.map(e => ({
             ...e,
-            _id: (e as any)._id.toString(),
-            organizer: (e as any).organizer.toString(),
+            _id: (e._id as Types.ObjectId).toString(),
+            organizer: (e.organizer as Types.ObjectId).toString(),
             date: e.date.toISOString(),
-            ticketTypes: e.ticketTypes?.map((t: any) => ({...t, _id: t._id.toString()}))
+            ticketTypes: e.ticketTypes?.map((t) => ({...t, _id: (t as unknown as TicketType)._id?.toString()}))
         })),
-        allTickets: allTickets.map((t: any) => ({
+        allTickets: allTickets.map((t) => ({
             ...t,
             _id: t._id.toString(),
-            event: { title: t.event?.title, _id: t.event?._id.toString() },
-            user: { name: t.user?.name, email: t.user?.email, _id: t.user?._id.toString() }
+            event: { title: t.event?.title, _id: t.event?._id?.toString() },
+            user: { name: t.user?.name, email: t.user?.email, _id: t.user?._id?.toString() }
         }))
     };
 }
@@ -54,9 +71,9 @@ export async function getEventAttendees(eventId: string) {
     const tickets = await Ticket.find({ event: eventId })
         .populate('user', 'name email')
         .sort({ checkedInAt: -1, createdAt: -1 })
-        .lean();
+        .lean<LeanTicket[]>();
 
-    return tickets.map((t: any) => ({
+    return tickets.map((t) => ({
         _id: t._id.toString(),
         userName: t.user?.name || 'Unknown',
         userEmail: t.user?.email || 'N/A',
