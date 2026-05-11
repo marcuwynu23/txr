@@ -20,7 +20,7 @@ function SubmitButton() {
 }
 
 export default function RegisterPage() {
-  const [state, action] = useActionState(register, undefined);
+  const [state, action] = useActionState(register, null);
 
   return (
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">

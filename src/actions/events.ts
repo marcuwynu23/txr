@@ -2,10 +2,27 @@
 
 import dbConnect from "@/lib/db";
 import { getSession } from "@/lib/session";
-import Event, { EventStatus, IEvent, TicketCategory } from "@/models/Event";
+import Event, { EventStatus, IEvent, ITicketType, TicketCategory } from "@/models/Event";
 import { SerializedEvent } from "@/types";
+import { Types } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+interface LeanEvent extends Omit<IEvent, '_id' | 'organizer'> {
+    _id: Types.ObjectId;
+    organizer: Types.ObjectId;
+}
+
+interface LeanTicketType extends ITicketType {
+    _id?: Types.ObjectId;
+}
+
+function serializeTicketTypes(ticketTypes?: ITicketType[]) {
+    return (ticketTypes as LeanTicketType[] | undefined)?.map((t) => ({
+        ...t,
+        _id: t._id?.toString() ?? ''
+    }));
+}
 
 export async function createEvent(formData: FormData) {
   await dbConnect();
@@ -29,12 +46,12 @@ export async function createEvent(formData: FormData) {
     throw new Error("Missing required fields");
   }
 
-  const newEvent = await Event.create({
+  await Event.create({
     title,
     description,
     location,
     date: new Date(date),
-    organizer: organizerId as any,
+    organizer: new Types.ObjectId(organizerId as string),
     status: EventStatus.DRAFT, 
     isPrivate,
     ticketTypes: [
@@ -57,30 +74,29 @@ export async function getAllEvents() {
     const session = await getSession();
     const isLoggedIn = !!session?.userId;
 
-    const query: any = { status: EventStatus.PUBLISHED };
+    const query: Record<string, unknown> = { status: EventStatus.PUBLISHED };
     
     // If not logged in, only show public events
     if (!isLoggedIn) {
         query.isPrivate = { $ne: true };
     }
 
-    const events = await Event.find(query).sort({ date: 1 }).lean<IEvent[]>();
+    const events = await Event.find(query).sort({ date: 1 }).lean<LeanEvent[]>();
     
     return events.map(event => ({
         ...event,
         _id: event._id.toString(),
-        organizer: (event as any).organizer.toString(),
+        organizer: event.organizer.toString(),
         date: event.date.toISOString(),
-        ticketTypes: event.ticketTypes?.map((t: any) => ({...t, _id: t._id.toString()}))
+        ticketTypes: serializeTicketTypes(event.ticketTypes)
     })) as unknown as SerializedEvent[];
 }
 
 export async function getEventById(id: string) {
     await dbConnect();
-    const mongoose = (await import("mongoose")).default;
-    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    if (!Types.ObjectId.isValid(id)) return null;
 
-    const event = await Event.findById(id).lean<IEvent>();
+    const event = await Event.findById(id).lean<LeanEvent>();
     if (!event) return null;
     
     const Ticket = (await import("@/models/Ticket")).default;
@@ -89,10 +105,10 @@ export async function getEventById(id: string) {
     
     return {
         ...event,
-        _id: (event as any)._id.toString(),
-        organizer: (event as any).organizer.toString(),
-        date: (event as any).date.toISOString(),
-        ticketTypes: (event as any).ticketTypes.map((t: any) => ({...t, _id: t._id.toString()})),
+        _id: event._id.toString(),
+        organizer: event.organizer.toString(),
+        date: event.date.toISOString(),
+        ticketTypes: serializeTicketTypes(event.ticketTypes),
         totalRegistered,
         totalCheckedIn
     } as unknown as SerializedEvent;
@@ -159,10 +175,9 @@ export async function getOrganizerEvents() {
     const session = await getSession();
     if (!session?.userId || session.role !== 'admin') return [];
 
-    const mongoose = (await import("mongoose")).default;
     const events = await Event.find({ 
-        organizer: new mongoose.Types.ObjectId(session.userId as string) 
-    }).sort({ date: 1 }).lean<IEvent[]>();
+        organizer: new Types.ObjectId(session.userId as string) 
+    }).sort({ date: 1 }).lean<LeanEvent[]>();
     
     const Ticket = (await import("@/models/Ticket")).default;
     
@@ -173,9 +188,9 @@ export async function getOrganizerEvents() {
         return {
             ...event,
             _id: event._id.toString(),
-            organizer: (event as any).organizer.toString(),
+            organizer: event.organizer.toString(),
             date: event.date.toISOString(),
-            ticketTypes: event.ticketTypes?.map((t: any) => ({...t, _id: t._id.toString()})),
+            ticketTypes: serializeTicketTypes(event.ticketTypes),
             totalRegistered,
             totalCheckedIn
         };

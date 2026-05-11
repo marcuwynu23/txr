@@ -6,6 +6,7 @@ import Event from "@/models/Event";
 import Ticket, { TicketStatus } from "@/models/Ticket";
 import { revalidatePath } from "next/cache";
 import QRCode from 'qrcode';
+import { Types } from "mongoose";
 
 export async function generateTicketCode() {
     // Simple random string for demo, real world might use UUID or signed tokens
@@ -39,7 +40,7 @@ export async function registerForEvent(eventId: string, ticketType: string) {
     
     await Ticket.create({
         event: eventId,
-        user: userId as any,
+        user: new Types.ObjectId(userId as string),
         ticketType, // e.g. "General Admission"
         code,
         status: TicketStatus.VALID
@@ -52,19 +53,28 @@ export async function registerForEvent(eventId: string, ticketType: string) {
     return { success: true };
 }
 
+interface LeanTicket {
+    _id: Types.ObjectId;
+    event: Types.ObjectId;
+    user: Types.ObjectId;
+    code: string;
+    ticketType: string;
+    status: string;
+}
+
 export async function getTicketForUser(eventId: string) {
     await dbConnect();
     const session = await getSession();
     const userId = session?.userId;
     if (!userId) return null;
 
-    const ticket = await Ticket.findOne({ event: eventId, user: userId }).populate('user', 'name').lean();
+    const ticket = await Ticket.findOne({ event: eventId, user: userId }).populate('user', 'name').lean<LeanTicket>();
     if (!ticket) return null;
 
     // Generate QR Data URL
     const qrData = JSON.stringify({
-        ticketId: (ticket as any)._id,
-        code: (ticket as any).code,
+        ticketId: ticket._id,
+        code: ticket.code,
         eventId
     });
     
@@ -72,9 +82,9 @@ export async function getTicketForUser(eventId: string) {
 
     return {
         ...ticket,
-        _id: (ticket as any)._id.toString(),
-        event: (ticket as any).event.toString(),
-        user: (ticket as any).user.toString(),
+        _id: ticket._id.toString(),
+        event: ticket.event.toString(),
+        user: ticket.user.toString(),
         qrCodeUrl
     };
 }
@@ -85,7 +95,7 @@ export async function cancelTicket(ticketId: string) {
     if (!session?.userId) throw new Error("Unauthorized");
 
     // Find ticket and ensure ownership
-    const ticket = await Ticket.findOne({ _id: ticketId, user: session.userId as any });
+    const ticket = await Ticket.findOne({ _id: ticketId, user: new Types.ObjectId(session.userId as string) });
     if (!ticket) throw new Error("Ticket not found or unauthorized");
 
     const eventId = ticket.event;
@@ -108,12 +118,20 @@ export async function cancelTicket(ticketId: string) {
     return { success: true };
 }
 
+interface PopulatedUser {
+    name?: string;
+}
+
+interface PopulatedEvent {
+    title?: string;
+}
+
 export async function checkInTicket(code: string) {
     await dbConnect();
     const session = await getSession();
     if (session?.role !== 'admin') throw new Error("Unauthorized: Admin access required");
 
-    const ticket = await Ticket.findOne({ code }).populate('event').populate('user');
+    const ticket = await Ticket.findOne({ code }).populate<{ event: PopulatedEvent }>('event').populate<{ user: PopulatedUser }>('user');
     if (!ticket) throw new Error("Ticket not found");
 
     if (ticket.status === TicketStatus.USED) {
@@ -121,8 +139,8 @@ export async function checkInTicket(code: string) {
             success: false, 
             message: "Ticket has already been used.",
             ticket: {
-                userName: (ticket.user as any)?.name,
-                eventTitle: (ticket.event as any)?.title,
+                userName: ticket.user?.name,
+                eventTitle: ticket.event?.title,
                 checkedInAt: ticket.checkedInAt
             }
         };
@@ -144,8 +162,8 @@ export async function checkInTicket(code: string) {
         success: true, 
         message: "Check-in successful!",
         ticket: {
-            userName: (ticket.user as any)?.name,
-            eventTitle: (ticket.event as any)?.title
+            userName: ticket.user?.name,
+            eventTitle: ticket.event?.title
         }
     };
 }

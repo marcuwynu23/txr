@@ -12,8 +12,32 @@ const QRScanner = dynamic(() => import("@/components/admin/QRScanner"), {
     loading: () => <div className="p-8 text-center text-gray-400">Loading scanner...</div>
 });
 
+interface AdminEvent {
+    _id: string;
+    title: string;
+    date: string;
+    totalRegistered?: number;
+    totalCheckedIn?: number;
+}
+
+interface AdminTicket {
+    _id: string;
+    code: string;
+    status: string;
+    user?: { name?: string };
+    event?: { title?: string };
+}
+
+interface AdminStats {
+    totalEvents: number;
+    totalTicketsSold: number;
+    totalCheckedIn: number;
+    recentEvents: AdminEvent[];
+    allTickets: AdminTicket[];
+}
+
 interface AdminDashboardClientProps {
-    stats: any;
+    stats: AdminStats;
 }
 
 export default function AdminDashboardClient({ stats }: AdminDashboardClientProps) {
@@ -57,7 +81,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
                 <h3 className="text-lg font-bold text-gray-900">My Events</h3>
             </div>
             <ul className="divide-y divide-gray-200">
-                {stats.recentEvents.map((event: any) => (
+                {stats.recentEvents.map((event) => (
                 <li key={event._id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                     <div className="flex-1 min-w-0 mr-4">
                     <p className="font-semibold text-gray-900 truncate">{event.title}</p>
@@ -100,7 +124,7 @@ export default function AdminDashboardClient({ stats }: AdminDashboardClientProp
                 <h3 className="text-lg font-semibold">Recent Tickets</h3>
             </div>
             <ul className="divide-y divide-gray-200">
-                {stats.allTickets.map((ticket: any) => (
+                {stats.allTickets.map((ticket) => (
                 <li key={ticket._id} className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <p className="font-medium text-gray-900">{ticket.user?.name || 'Unknown User'}</p>

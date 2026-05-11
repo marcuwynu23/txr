@@ -20,8 +20,7 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [state, action] = useActionState(login, undefined);
+  const [state, action] = useActionState(login, null);
 
   return (
     <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">

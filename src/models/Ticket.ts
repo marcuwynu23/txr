@@ -14,7 +14,7 @@ export interface ITicket extends Document {
   code: string; // Unique codes for QR
   status: TicketStatus;
   checkedInAt?: Date;
-  metadata?: Record<string, any>; // Extra info if needed
+  metadata?: Record<string, unknown>; // Extra info if needed
   createdAt: Date;
   updatedAt: Date;
 }

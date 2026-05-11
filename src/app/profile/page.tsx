@@ -4,8 +4,15 @@
 import { getUserProfile, updateProfile } from '@/actions/auth';
 import { useActionState, useEffect, useState } from 'react';
 
+interface UserProfile {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
 export default function ProfilePage() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [state, action, isPending] = useActionState(updateProfile, null);
 
     useEffect(() => {

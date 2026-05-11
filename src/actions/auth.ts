@@ -21,7 +21,12 @@ const registerSchema = z.object({
 })
 
 interface AuthFormState {
-  errors?: Record<string, string[]>;
+  errors?: {
+    name?: string[];
+    email?: string[];
+    password?: string[];
+    role?: string[];
+  };
   error?: string;
   success?: string;
 }

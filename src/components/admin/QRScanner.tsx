@@ -32,7 +32,7 @@ export default function QRScanner() {
 
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.clear().catch((err: any) => console.error("Failed to clear scanner", err));
+                scannerRef.current.clear().catch((err: unknown) => console.error("Failed to clear scanner", err));
             }
         };
     }, [isScanning]);
@@ -73,16 +73,17 @@ export default function QRScanner() {
                     type: 'error'
                 });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to process ticket.';
             showAlert({
                 title: 'Error',
-                message: error.message || 'Failed to process ticket.',
+                message,
                 type: 'error'
             });
         }
     }
 
-    function onScanFailure(error: any) {
+    function onScanFailure(_error: string) {
         // console.warn(`QR error = ${error}`);
     }
 

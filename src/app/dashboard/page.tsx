@@ -31,7 +31,7 @@ export default async function DashboardPage() {
              </div>
            </div>
         ) : (
-          tickets.map((ticket: any) => (
+          tickets.map((ticket) => (
              <div key={ticket._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col md:flex-row shadow-sm hover:shadow-md transition-all">
                 <div className="p-6 flex-1 space-y-4">
                     <div className="flex justify-between items-start">
