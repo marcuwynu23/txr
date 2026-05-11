@@ -24,7 +24,7 @@ const TicketSchema: Schema<ITicket> = new Schema(
     event: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
     ticketType: { type: String, required: true }, // Referencing the subdocument name
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    code: { type: String, required: true, unique: true },
+    code: { type: String, required: true },
     status: { 
         type: String, 
         enum: Object.values(TicketStatus), 
